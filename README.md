@@ -1,16 +1,27 @@
 # claude-llamafile-sandbox
 
+Run Claude Code fully offline using a local LLM, with file system access sandboxed at the OS level via [Agent Safehouse](https://github.com/eugene1g/safehouse).
 
-An experimental setup to run Claude Code with a fully local LLM and sandboxed environment on Mac mini M4.
+No API calls leave your machine. No cloud costs.
+
+## What this does
+
+Claude Code normally requires the Anthropic API. This setup replaces that with a local Qwen3 model running via [llamafile](https://github.com/mozilla-ai/llamafile), and wraps the agent in a macOS sandbox so it can only read/write the project directory.
+
+Two things make this work cleanly:
+
+1. **llamafile v0.10.0+ natively supports the Anthropic Messages API** (`/v1/messages`) — Claude Code connects directly, no proxy needed.
+2. **Safehouse enforces OS-level file isolation** — this makes it safe to run Claude Code with `--dangerously-skip-permissions`, eliminating interactive prompts while keeping the sandbox intact.
+
+Tested on Mac mini M4 with Qwen3-1.7B (~1.8GB, Q8_0). Qwen3-1.7B works for simple tasks; 8B or 30B is recommended for serious coding work.
 
 ## Architecture
 
 ```
 Claude Code
-  → llamafile :8080  (Qwen3 local inference, Anthropic API native)
+  → llamafile :8080  (Qwen3, Anthropic API native)
+  [sandboxed by Safehouse — file access restricted to project directory]
 ```
-
-llamafile v0.10.0+ natively supports the Anthropic Messages API (`/v1/messages`), so Claude Code connects directly without a proxy. A custom proxy (`proxy.py`) is also included as an optional alternative.
 
 | Tool | Role |
 |------|------|
