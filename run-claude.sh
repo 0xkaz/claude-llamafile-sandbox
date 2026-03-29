@@ -1,13 +1,25 @@
 #!/bin/bash
-# Start Claude Code connected to a local LLM via the proxy
+# Start Claude Code connected to a local LLM via Safehouse sandbox.
+#
+# llamafile v0.10.0+ natively supports the Anthropic Messages API (/v1/messages),
+# so Claude Code can connect to it directly without a proxy.
+#
+# If you need a proxy (e.g. for protocol debugging or using an older llamafile),
+# set LITELLM_PORT and uncomment the proxy section below.
 
-LITELLM_PORT="${LITELLM_PORT:-4000}"
+LLAMA_PORT="${LLAMA_PORT:-8080}"
 
-# Check that the proxy is running
-if ! curl -sf "http://localhost:${LITELLM_PORT}/health" > /dev/null 2>&1; then
-  echo "Error: proxy is not running."
-  echo "Start it first in another terminal: ./run-proxy.sh"
-  echo "To use a different port: LITELLM_PORT=4001 ./run-proxy.sh"
+# --- Option A: Direct connection to llamafile (default) ---
+ANTHROPIC_BASE_URL="http://localhost:${LLAMA_PORT}"
+
+# --- Option B: Via proxy (run-proxy.sh must be running first) ---
+# LITELLM_PORT="${LITELLM_PORT:-4000}"
+# ANTHROPIC_BASE_URL="http://localhost:${LITELLM_PORT}"
+
+# Check that the LLM server (or proxy) is reachable
+if ! curl -sf "${ANTHROPIC_BASE_URL}/health" > /dev/null 2>&1; then
+  echo "Error: cannot reach ${ANTHROPIC_BASE_URL}"
+  echo "Start the LLM server first: ./run-llama.sh"
   exit 1
 fi
 
@@ -23,7 +35,7 @@ NODE_BIN="$(dirname "$(which node)")"
 ENV_FILE="$(mktemp)"
 cat > "$ENV_FILE" <<EOF
 export PATH="${NODE_BIN}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-export ANTHROPIC_BASE_URL="http://localhost:${LITELLM_PORT}"
+export ANTHROPIC_BASE_URL="${ANTHROPIC_BASE_URL}"
 export ANTHROPIC_API_KEY="local-secret"
 EOF
 

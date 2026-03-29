@@ -1,6 +1,6 @@
 # Setup Instructions
 
-How to run Claude Code with a local LLM (Qwen3) + custom proxy (proxy.py) + Safehouse sandbox on Mac mini M4.
+How to run Claude Code with a local LLM (Qwen3) + Safehouse sandbox on Mac mini M4.
 
 ---
 
@@ -22,7 +22,8 @@ How to run Claude Code with a local LLM (Qwen3) + custom proxy (proxy.py) + Safe
 This installs and verifies:
 - **Agent Safehouse** — macOS sandbox
 - **Claude Code** — coding agent
-- **FastAPI / uvicorn / httpx** — dependencies for proxy.py
+- **huggingface_hub** — for downloading models
+- **FastAPI / uvicorn / httpx** — only needed if using the optional proxy
 
 ---
 
@@ -44,7 +45,7 @@ Switch models by toggling comments in `download-model.sh` and `run-llama.sh` (or
 
 ---
 
-## Step 3: Start (3 terminals)
+## Step 3: Start (2 terminals)
 
 ### Terminal 1 — LLM server
 
@@ -58,29 +59,34 @@ Two options available — both use the same port:
 
 Ready when you see `llama server listening` or `main: server is listening`.
 
-### Terminal 2 — proxy (proxy.py)
-
-```bash
-./run-proxy.sh
-```
-
-Translates between Claude Code's Anthropic API format and llamafile's OpenAI-compatible format.
-
-### Terminal 3 — Claude Code agent
+### Terminal 2 — Claude Code agent
 
 ```bash
 ./run-claude.sh
 ```
 
-Claude Code starts inside the Safehouse sandbox. File access outside this directory is denied.
+Claude Code connects directly to llamafile (which natively supports the Anthropic Messages API since v0.10.0) and starts inside the Safehouse sandbox. File access outside this directory is denied.
 
 > **Note:** `run-claude.sh` uses `--dangerously-skip-permissions`, which disables Claude Code's own interactive permission prompts. This is safe here because Safehouse enforces sandbox restrictions at the OS level. Do not use this flag outside of a sandboxed environment.
 
 ---
 
+## Optional: Using the Proxy
+
+If you need to route Claude Code through `proxy.py` (e.g. for protocol debugging or older llamafile versions), a third terminal is required:
+
+```bash
+./run-proxy.sh        # Terminal 2 — proxy
+./run-claude.sh       # Terminal 3 — agent (edit run-claude.sh to enable Option B)
+```
+
+In `run-claude.sh`, comment out Option A and uncomment Option B to point Claude Code at the proxy instead of llamafile directly.
+
+---
+
 ## Customizing Ports
 
-If the default ports conflict with other services, override them with environment variables. Use the same values across all three terminals.
+Override ports with environment variables if defaults conflict with other services.
 
 | Variable | Default | Used by |
 |----------|---------|---------|
@@ -88,10 +94,14 @@ If the default ports conflict with other services, override them with environmen
 | `LITELLM_PORT` | `4000` | proxy (proxy.py) |
 
 ```bash
-# Example: using custom ports
-LLAMA_PORT=9080 ./run-llama.sh                       # Terminal 1
-LLAMA_PORT=9080 LITELLM_PORT=4001 ./run-proxy.sh  # Terminal 2
-LITELLM_PORT=4001 ./run-claude.sh                    # Terminal 3
+# Direct mode (2 terminals)
+LLAMA_PORT=9080 ./run-llama.sh
+LLAMA_PORT=9080 ./run-claude.sh
+
+# Proxy mode (3 terminals)
+LLAMA_PORT=9080 ./run-llama.sh
+LLAMA_PORT=9080 LITELLM_PORT=4001 ./run-proxy.sh
+LITELLM_PORT=4001 ./run-claude.sh
 ```
 
 ---
@@ -104,9 +114,9 @@ LITELLM_PORT=4001 ./run-claude.sh                    # Terminal 3
 ├── download-model.sh   # Download model
 ├── run-llama.sh        # Start LLM server (llamafile version)
 ├── run-llama-server.sh # Start LLM server (llama-server version, requires brew)
-├── run-proxy.sh        # Start proxy
 ├── run-claude.sh       # Start agent
-├── proxy.py            # Anthropic→OpenAI conversion proxy
+├── run-proxy.sh        # Start proxy (optional)
+├── proxy.py            # Optional Anthropic→OpenAI conversion proxy
 └── .safehouse          # Safehouse project config
 ```
 
@@ -129,4 +139,4 @@ Model files (created by `download-model.sh`, not committed to git):
 | `fastapi not found` | Run `./setup.sh` |
 | Port 8080 already in use | Start with `LLAMA_PORT=9080` |
 | Port 4000 already in use | Start with `LITELLM_PORT=4001` |
-| Claude Code can't reach the model | Check logs in Terminals 1 & 2. Start the proxy (Terminal 2) before Terminal 3 |
+| Claude Code can't reach the model | Check that Terminal 1 shows `server is listening` |

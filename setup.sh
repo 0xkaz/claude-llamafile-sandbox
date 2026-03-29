@@ -25,6 +25,7 @@ else
 fi
 
 # Dependencies for proxy.py (FastAPI / uvicorn / httpx)
+# Only needed if using run-proxy.sh (optional — llamafile v0.10.0+ supports Anthropic API natively)
 if python3 -c "import fastapi, uvicorn, httpx" &>/dev/null; then
   echo "[OK] fastapi / uvicorn / httpx found"
 else
@@ -45,6 +46,8 @@ fi
 echo ""
 echo "Setup complete. Next steps:"
 echo "  ./download-model.sh   # Download model (~1.8GB, Qwen3-1.7B default)"
-echo "  ./run-llama.sh        # Start AI server (Terminal 1)"
-echo "  ./run-proxy.sh        # Start proxy (Terminal 2)"
-echo "  ./run-claude.sh       # Start agent (Terminal 3)"
+echo "  ./run-llama.sh        # Start LLM server (Terminal 1)"
+echo "  ./run-claude.sh       # Start agent (Terminal 2)"
+echo ""
+echo "Optional (proxy):"
+echo "  ./run-proxy.sh        # Start proxy if needed (Terminal 2, then agent in Terminal 3)"
