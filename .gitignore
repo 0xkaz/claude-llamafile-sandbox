@@ -1,0 +1,11 @@
+# model files
+*.llamafile
+*.gguf
+*.bin
+
+# macOS
+.DS_Store
+
+
+# log
+*.log

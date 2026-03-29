@@ -1,0 +1,10 @@
+# Safehouse project configuration
+# Activated by: safehouse --trust-workdir-config
+# Note: run-claude.sh does NOT use this file automatically;
+#       --trust-workdir-config must be passed explicitly to enable it.
+
+# Additional read-write directories (beyond the working directory)
+# add-dirs=./subdir
+
+# Read-only directories (for referencing external files)
+# add-dirs-ro=/usr/local/share/somelib
